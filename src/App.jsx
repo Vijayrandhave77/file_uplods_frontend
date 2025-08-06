@@ -7,7 +7,10 @@ import {
   FaFileImage,
   FaFileVideo,
   FaFile,
+  FaTrashAlt,
 } from "react-icons/fa";
+
+import "./App.css"; // 👈 External CSS
 
 const fileTypeIcon = (fileName) => {
   const ext = fileName?.split(".").pop().toLowerCase();
@@ -48,6 +51,7 @@ const App = () => {
 
   const handleUpload = async () => {
     if (!file) return alert("Please select a file");
+
     const formData = new FormData();
     formData.append("file", file);
 
@@ -62,65 +66,37 @@ const App = () => {
     }
   };
 
-  return (
-    <div
-      style={{
-        padding: "40px",
-        fontFamily: "Arial, sans-serif",
-        backgroundColor: "#f4f4f4",
-        minHeight: "100vh",
-      }}
-    >
-      <h1 style={{ textAlign: "center", color: "#333", marginBottom: "30px" }}>
-        📁 File Upload System
-      </h1>
+  const handleDelete = async (filename) => {
+    const confirmDelete = window.confirm(`Delete ${filename}?`);
+    if (!confirmDelete) return;
 
-      <div
-        style={{
-          backgroundColor: "#fff",
-          padding: "20px",
-          borderRadius: "8px",
-          maxWidth: "500px",
-          margin: "0 auto 40px",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-          textAlign: "center",
-        }}
-      >
-        <input
-          type="file"
-          onChange={handleFileChange}
-          style={{ marginBottom: "20px" }}
-        />
+    try {
+      await axios.delete(`${BACKEND_URL}/delete/${filename}`);
+      setUploadedFiles((prev) =>
+        prev.filter((file) => file.filename !== filename)
+      );
+      alert("File deleted");
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert("Failed to delete");
+    }
+  };
+
+  return (
+    <div className="container">
+      <h1 className="title">📁 File Upload System</h1>
+
+      <div className="upload-box">
+        <input type="file" onChange={handleFileChange} />
         <br />
-        <button
-          onClick={handleUpload}
-          style={{
-            backgroundColor: "#007bff",
-            color: "#fff",
-            padding: "10px 20px",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-            fontSize: "14px",
-          }}
-        >
+        <button onClick={handleUpload} className="upload-btn">
           Upload
         </button>
       </div>
 
-      <h2 style={{ textAlign: "center", marginBottom: "20px" }}>
-        Uploaded Files
-      </h2>
+      <h2 className="sub-title">Uploaded Files</h2>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-          gap: "20px",
-          maxWidth: "1100px",
-          margin: "0 auto",
-        }}
-      >
+      <div className="grid">
         {uploadedFiles.map((file, index) => {
           const { filename, url } = file;
           const ext = filename?.split(".").pop().toLowerCase();
@@ -128,65 +104,27 @@ const App = () => {
           const isVideo = ["mp4", "webm"].includes(ext);
 
           return (
-            <div
-              key={index}
-              style={{
-                backgroundColor: "#fff",
-                padding: "10px",
-                borderRadius: "8px",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                textAlign: "center",
-              }}
-            >
+            <div key={index} className="card">
               {isImage ? (
-                <img
-                  src={url}
-                  alt={filename}
-                  style={{
-                    width: "100%",
-                    height: "120px",
-                    objectFit: "cover",
-                    borderRadius: "4px",
-                  }}
-                />
+                <img src={url} alt={filename} className="media" />
               ) : isVideo ? (
-                <video
-                  src={url}
-                  controls
-                  style={{
-                    width: "100%",
-                    height: "120px",
-                    borderRadius: "4px",
-                  }}
-                />
+                <video src={url} controls className="media" />
               ) : (
                 fileTypeIcon(filename)
               )}
 
-              <div
-                style={{
-                  marginTop: "10px",
-                  fontSize: "13px",
-                  wordBreak: "break-word",
-                }}
-              >
-                {filename}
-              </div>
+              <div className="filename">{filename}</div>
 
-              <a
-                href={url}
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  display: "block",
-                  marginTop: "5px",
-                  fontSize: "12px",
-                  color: "#007bff",
-                  textDecoration: "none",
-                }}
-              >
+              <a href={url} target="_blank" rel="noreferrer" className="link">
                 Download
               </a>
+
+              <button
+                className="delete-btn"
+                onClick={() => handleDelete(filename)}
+              >
+                <FaTrashAlt /> Delete
+              </button>
             </div>
           );
         })}
